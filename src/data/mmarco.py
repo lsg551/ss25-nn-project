@@ -44,7 +44,7 @@ def _sample_as_binary_task(sample: mMARCOSample) -> list[mMARCOBinaryTask]:
         mMARCOBinaryTask(
             query=sample["query"],
             candidate=sample["positive"],
-            label=torch.tensor(0.0, dtype=torch.float),
+            label=torch.tensor(1.0, dtype=torch.float),
         ),
         mMARCOBinaryTask(
             query=sample["query"],
@@ -111,7 +111,8 @@ class mMARCO(TorchIterableDataset):
             shuffle (bool, optional): If True and split == 'train', apply
                 streaming shuffle (HF buffer shuffle). Defaults to True.
             shuffle_buffer_size (int, optional): Buffer size for HF shuffle
-                (trade-off randomness vs memory). Defaults to 10_000.
+                (trade-off randomness vs memory). I.e., how many samples are
+                kept in memory. Defaults to 10_000.
             max_samples (Optional[int], optional): Optional cap (after split
                 filtering). Useful to bound an "epoch"; if None, length is
                 undefined (no __len__). Defaults to None.
