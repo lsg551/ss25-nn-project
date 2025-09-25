@@ -29,18 +29,34 @@ class CrossEncoderBERT(nn.Module):
 
     For pairwise passage ranking, all pairs can be sorted by the raw logits
     once all candidates have been scored.
-
     """
 
-    def __init__(self, model_name=MODEL):
-        super(CrossEncoderBERT, self).__init__()
+    def __init__(
+        self,
+        model_name: str = MODEL,
+        *,
+        enable_gradient_checkpointing: bool = False,
+        dropout: float = 0.1,
+    ) -> None:
+        """Create a new CrossEncoderBERT model.
+
+        Args:
+            model_name (str, optional): Hugging Face model identifier.
+                Defaults to MODEL.
+            enable_gradient_checkpointing (bool, optional): Enable gradient
+                checkpointing to save activation memory at cost of extra compute.
+                Defaults to False.
+        """
+        super().__init__()
         self.bert: BertModel = BertModel.from_pretrained(model_name)
-        self.dropout = nn.Dropout(p=0.1)
-        # self.activation = nn.ReLU()
 
-        # Ba et al.: Layer Normalization (2016), cf. https://arxiv.org/pdf/1607.06450
-        # self.layernorm = nn.LayerNorm(self.bert.config.hidden_size)
+        if enable_gradient_checkpointing:
+            if hasattr(self.bert.config, "use_cache"):
+                # disable use_cache if gradient checkpointing is enabled
+                self.bert.config.use_cache = False
+            self.bert.gradient_checkpointing_enable()
 
+        self.dropout = nn.Dropout(0.1)
         self.classifier = nn.Linear(self.bert.config.hidden_size, 1)
 
     def forward(
@@ -68,13 +84,34 @@ class CrossEncoderBERT(nn.Module):
 
         return logits
 
-    @staticmethod
-    def tokenize(query: str | list[str], candidate: str | list[str]):
+    def tokenize(
+        self,
+        queries: str | list[str],
+        candidates: str | list[str],
+        *,
+        padding: str = "longest",
+        max_length: int = 512,
+    ):
+        """Tokenize one or many (query, candidate) pairs.
+
+        Args:
+            query: A single query string or a list of queries.
+            candidate: A single candidate string or a list of candidates.
+            padding: Padding strategy. See
+                https://huggingface.co/docs/transformers/main/en/main_classes/tokenizer#transformers.PreTrainedTokenizerBase.__call__
+                for details. Defaults to "longest" (dynamic padding).
+            max_length: Optional max length for truncation/padding. If None,
+                uses the model's default max length (usually 512 for BERT).
+
+        Returns:
+            BatchEncoding: A dictionary-like object with the following
+                fields: input_ids, attention_mask, token_type_ids etc.
+        """
         return tokenizer(
-            query,
-            candidate,
-            padding="max_length",
+            queries,
+            candidates,
             truncation=True,
-            max_length=512,
+            padding=padding,
+            max_length=max_length,
             return_tensors="pt",
         )
