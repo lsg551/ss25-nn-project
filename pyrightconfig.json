@@ -1,0 +1,22 @@
+{
+    "include": [
+        "**/*.py",
+        "**/*.ipynb"
+    ],
+    "executionEnvironments": [
+        {
+            "root": ".",
+            "exclude": [
+                "**/*.ipynb"
+            ] // default strict settings for .py files
+        },
+        {
+            "root": ".",
+            "include": [
+                "**/*.ipynb"
+            ],
+            "reportUnknownVariableType": "none",
+            "reportMissingTypeStubs": "none"        
+    }
+    ]
+}
