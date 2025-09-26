@@ -11,7 +11,21 @@ tokenizer: BertTokenizer = BertTokenizer.from_pretrained(MODEL)
 #
 
 
-class ClassificationHead(nn.Module): ...
+class ClassificationHead(nn.Module):
+    def __init__(self, input_dim: int, output_dim: int) -> None:
+        super().__init__()
+        self.layer1 = nn.Linear(input_dim, 2 * input_dim)
+        self.activation1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(0.1)
+        self.layer2 = nn.Linear(2 * input_dim, output_dim)
+
+    # as input, takes the pooled or raw CLS token output
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.layer1(x)
+        x = self.activation1(x)
+        x = self.dropout1(x)
+        x = self.layer2(x)
+        return x
 
 
 class CrossEncoderBERT(nn.Module):
@@ -56,8 +70,10 @@ class CrossEncoderBERT(nn.Module):
                 self.bert.config.use_cache = False
             self.bert.gradient_checkpointing_enable()
 
-        self.dropout = nn.Dropout(0.1)
-        self.classifier = nn.Linear(self.bert.config.hidden_size, 1)
+        self.classifier = ClassificationHead(
+            input_dim=self.bert.config.hidden_size,
+            output_dim=1,  # 1 = raw logit
+        )
 
     def forward(
         self,
@@ -78,9 +94,9 @@ class CrossEncoderBERT(nn.Module):
         # Only BERT implements this, newer models like RoBERTa don't have it.
 
         # cls_output = out.last_hidden_state[:, 0] # [:, 0, :] == [:, 0]
-        cls_output = out.pooler_output
+        cls_output = out.pooler_output  # shape
 
-        logits = self.classifier(self.dropout(cls_output))
+        logits = self.classifier(cls_output)
 
         return logits
 
