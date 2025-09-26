@@ -214,13 +214,18 @@ class mMARCO(TorchIterableDataset):
     ]:
         """Get the mMARCO dataset as a PyTorch `DataLoader` for each split.
 
-        Each split is its own dataset instance filtering the shared streamingsource.
-        NOTE: If `max_samples_per_split` is set, each split yields at most that many
-        *original* samples (default `collate_fn` expands each into two binary tasks).
+        Each split is its own dataset instance filtering the shared streaming
+        source. If `max_samples_per_split` is set, each split yields at most
+        that many *original* samples
+        
+        NOTE: Default `collate_fn` expands each into two binary tasks.
+        Therefore, the argument `max_samples_per_split` is divided by two.
 
         Args:
             batch_size (int, optional): Samples aggregated in batches for
-                efficiency. Defaults to 32.
+                efficiency. NOTE: because the default implementation of `collate_fn`
+                effectively doubles the batch size, `batch_size` is divided by 2 for
+                user-defined batch sizes. Defaults to 32.
             fractions (tuple[float, float, float], optional): Split configuration.
                 Defaults to (0.8, 0.1, 0.1).
             seed (int, optional): Seed for reproducibility. Defaults to 42.
@@ -238,6 +243,18 @@ class mMARCO(TorchIterableDataset):
             tuple[ DataLoader[mMARCOBatch], DataLoader[mMARCOBatch], DataLoader[mMARCOBatch] ]:
                 a 3-tuple of DataLoaders for train, val, test splits.
         """
+
+        if max_samples_per_split is not None:
+            # HACK: account for collate_fn doubling the number of samples
+            max_samples_per_split = max_samples_per_split // 2
+
+        # HACK: account for collate_fn doubling the number of samples
+        batch_size = batch_size // 2
+        if batch_size < 1:
+            raise ValueError(
+                "batch_size too small; must be at least 2 to account for collate_fn doubling samples"
+            )
+    
 
         # NOTE: the `DataLoader` signature usually does not permit an `IterableDataset`,
         # but in the docstring: … risky, but works (probably) …
@@ -284,6 +301,11 @@ class mMARCO(TorchIterableDataset):
             batch_size=batch_size,
             collate_fn=collate_fn,
             num_workers=num_workers,
+            # TODO: for even faster processing, enable these
+            # But read the docs about `pin_memory` first, there's something to
+            # consider if collate_fn is custom
+            # pin_memory=True,
+            # persistent_workers=True
         )
 
         return train_loader, val_loader, test_loader
