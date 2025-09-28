@@ -1,3 +1,3 @@
-from ._1_BERT_pertrained import CrossEncoderBERT
+from .CrossEncoderBERT import CrossEncoderBERT
 
 __all__ = ["CrossEncoderBERT"]
