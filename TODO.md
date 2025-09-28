@@ -1,8 +1,8 @@
 # Immediate TODOs 2025-09-26
 
-- [ ] Fix the mixed precision training
-- [ ] Do _NOT_ compute validation loss (mean / std / CV) per batch, but over samples
-- [ ] Plot gradient norms to detect exploding gradients
+- [x] Fix the mixed precision training
+- [x] Do _NOT_ compute (validation) std / CV of the loss per batch, but over samples
+- [x] Plot gradient norms to detect exploding gradients
 - [ ] Investigate whether gradient clipping helps
 
 - [ ] LR scheduling: BERT fine‑tuning commonly uses linear warmup + decay. Add
@@ -21,7 +21,7 @@
 
 ## Notes
 
-### Computing loss metrics
+### Computing STD / CSV
 
 When validating a model, the validation data is usually split into batches,
 and the loss is calculated for each batch (≠ per sample).
