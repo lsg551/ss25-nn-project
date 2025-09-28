@@ -1,0 +1,10 @@
+Query: What is the capital of France?
+
+Score: 0.9991 - Candidate: Paris is the capital of France.
+Score: 0.9936 - Candidate: France is in Europe.
+Score: 0.8361 - Candidate: Marseille is a city in France.
+Score: 0.0519 - Candidate: Berlin is the capital of Germany.
+Score: 0.0231 - Candidate: Rome is the capital of Italy.
+Score: 0.0151 - Candidate: Lyon is known for its cuisine.
+Score: 0.0093 - Candidate: Madrid is the capital of Spain.
+Score: 0.0002 - Candidate: Macron is the president of France.
