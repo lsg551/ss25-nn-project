@@ -1,5 +1,7 @@
 """mMARCO dataset.
 
+https://huggingface.co/datasets/unicamp-dl/mmarco
+
 Use the `mMARCO` class directly or `mMARCO.as_dataloaders()` to create a
 streaming dataset as PyTorch's 'DataLoader' to use in a PyTorch training
 loop directly.
@@ -15,7 +17,7 @@ from datasets import load_dataset
 from torch.utils.data import DataLoader
 from torch.utils.data import IterableDataset as TorchIterableDataset
 
-from src.data.itersplit import IterSplit, Split
+from src.utils.itersplit import IterSplit, Split
 
 
 class mMARCOSample(TypedDict):
@@ -217,7 +219,7 @@ class mMARCO(TorchIterableDataset):
         Each split is its own dataset instance filtering the shared streaming
         source. If `max_samples_per_split` is set, each split yields at most
         that many *original* samples
-        
+
         NOTE: Default `collate_fn` expands each into two binary tasks.
         Therefore, the argument `max_samples_per_split` is divided by two.
 
@@ -254,7 +256,6 @@ class mMARCO(TorchIterableDataset):
             raise ValueError(
                 "batch_size too small; must be at least 2 to account for collate_fn doubling samples"
             )
-    
 
         # NOTE: the `DataLoader` signature usually does not permit an `IterableDataset`,
         # but in the docstring: … risky, but works (probably) …

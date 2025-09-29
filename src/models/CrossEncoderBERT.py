@@ -1,23 +1,39 @@
+"""CrossEncoderBERT is a BERT-based cross-encoder for pointwise and pairwise
+ranking tasks.
+
+NOTE: For listewise ranking, BERT has usually not enough context to process all
+candidates at once, so a model with larger context is required. A quick empirical
+test showed that all MS MARCO candidates in a single sample usually exceed BERT's
+512 token limit (between 500 and 1200 tokens). `CrossEncoderLongformer` is an
+alternative for listewise ranking. Although it introduced a lot of bias or even
+renders any comparison meaningless, it's at least BERT-like.
+"""
+
 import torch
 import torch.nn as nn
 from transformers import BertModel, BertTokenizer
 
 MODEL = "bert-base-uncased"
-
 tokenizer: BertTokenizer = BertTokenizer.from_pretrained(MODEL)
 
-# NOTE: we _could_ also use BertForSequenceClassification, which adds a
-# classification head on top of BERT as well as loss computation ...
-#
 
+class PointwiseRankingHead(nn.Module):
+    """Classification head for pointwise ranking.
 
-class ClassificationHead(nn.Module):
+    For pointwise ranking, the model predicts a relevance score for each
+    (query, candidate) pair independently. I.e., the output layer is =1 and
+    returns a single logit. After processing all pairs separately, the relevance
+    scores can be sorted to get the final ranking (e.g., via a sigmoid mask).
+    """
+
     def __init__(self, input_dim: int, output_dim: int) -> None:
         super().__init__()
-        self.layer1 = nn.Linear(input_dim, 2 * input_dim)
-        self.activation1 = nn.ReLU()
-        self.dropout1 = nn.Dropout(0.1)
-        self.layer2 = nn.Linear(2 * input_dim, output_dim)
+        self.layer1 = nn.Linear(input_dim, input_dim // 2)
+        # NOTE: ReLU seems to cause gradient issues sometimes (although no proof),
+        # so sticking with LeakyReLU or GELU
+        self.activation1 = nn.GELU()
+        self.dropout1 = nn.Dropout(0.2)
+        self.layer2 = nn.Linear(input_dim // 2, output_dim)
 
     # as input, takes the pooled or raw CLS token output
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -26,6 +42,26 @@ class ClassificationHead(nn.Module):
         x = self.dropout1(x)
         x = self.layer2(x)
         return x
+
+
+class PairwiseRankingHead(nn.Module):
+    """Classification head for pairwise ranking.
+
+    For pairwise ranking, the model predicts a relevance score for each
+    (query, candidate A, candidate B) triplet. The objective is to …
+
+    There are two possible implementations:
+
+    1. Two logits output
+
+    2. Two forward passes.
+    """
+
+    ...
+    # TODO: implement
+
+
+# TODO: add a property to let the user decide which model to use (pointwise,pairwise)
 
 
 class CrossEncoderBERT(nn.Module):
@@ -50,7 +86,6 @@ class CrossEncoderBERT(nn.Module):
         model_name: str = MODEL,
         *,
         enable_gradient_checkpointing: bool = False,
-        dropout: float = 0.1,
     ) -> None:
         """Create a new CrossEncoderBERT model.
 
@@ -70,7 +105,7 @@ class CrossEncoderBERT(nn.Module):
                 self.bert.config.use_cache = False
             self.bert.gradient_checkpointing_enable()
 
-        self.classifier = ClassificationHead(
+        self.classifier = PointwiseRankingHead(
             input_dim=self.bert.config.hidden_size,
             output_dim=1,  # 1 = raw logit
         )
@@ -131,3 +166,17 @@ class CrossEncoderBERT(nn.Module):
             max_length=max_length,
             return_tensors="pt",
         )
+
+    def rank(
+        self, query: str, candidates: list[str], *, device: str | torch.device
+    ) -> list[tuple[str, float]]:
+        self.eval()
+        inputs = self.tokenize([query] * len(candidates), list(candidates)).to(device)
+        with torch.no_grad():
+            logits = self(
+                input_ids=inputs["input_ids"],  # type: ignore
+                attention_mask=inputs["attention_mask"],  # type: ignore
+                token_type_ids=inputs["token_type_ids"],  # type: ignore
+            )
+        scores = torch.sigmoid(logits).squeeze(-1).tolist()
+        return sorted(zip(candidates, scores), key=lambda x: x[1], reverse=True)

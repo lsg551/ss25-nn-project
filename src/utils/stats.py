@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Self
 
 import torch
 
@@ -138,3 +139,21 @@ class Stats:
         self.end = datetime.now()
         self.elapsed = (self.end - self.start).total_seconds()
         return self.elapsed
+
+    def save(self, filename: str):
+        """Save the stats to a JSON file."""
+        import json
+
+        with open(filename, "w") as f:
+            json.dump(self.__dict__, f, indent=4, default=str)
+            print(f"Stats dumped to {filename}")
+
+    @classmethod
+    def from_json(cls, filename: str) -> Self:
+        """Load stats from a JSON file."""
+        import json
+
+        with open(filename, "r") as f:
+            data = json.load(f)
+            print(f"Stats loaded from {filename}")
+            return cls(**data)
