@@ -1,0 +1,144 @@
+# ============================== Papers ==============================
+
+@article{netwok2020,
+  title={At-scale impact of the {Net Wok}: A culinarically holistic investigation of distributed dumplings},
+  author={Astley, Rick and Morris, Linda},
+  journal={Armenian Journal of Proceedings},
+  volume={61},
+  pages={192--219},
+  year=2020,
+  publisher={Automatic Publishing Inc.}
+}
+
+@article{netwok2022,
+  title={{Net Wok}++: Taking distributed dumplings to the cloud},
+  author={Morris, Linda and Astley, Rick},
+  journal={Armenian Journal of Proceedings},
+  volume={65},
+  pages={101--118},
+  year=2022,
+  publisher={Automatic Publishing Inc.}
+}
+
+
+@misc{zhang_rank-without-gpt_2023,
+	title = {Rank-without-{GPT}: {Building} {GPT}-{Independent} {Listwise} {Rerankers} on {Open}-{Source} {Large} {Language} {Models}},
+	shorttitle = {Rank-without-{GPT}},
+	author = {Zhang, Xinyu and Hofstätter, Sebastian and Lewis, Patrick and Tang, Raphael and Lin, Jimmy},
+	publisher = {arXiv},
+	url = {http://arxiv.org/abs/2312.02969},
+	doi = {10.48550/arXiv.2312.02969},
+	month = dec,
+	year = {2023},
+}
+
+# Liu Tie-Yan apparently established the distinction pointwise/pairwise/listwise
+# in this 2009 survey article.
+@article{tie-yan2009,
+  url = {http://dx.doi.org/10.1561/1500000016},
+  year = {2009},
+  volume = {3},
+  journal = {Foundations and Trends® in Information Retrieval},
+  title = {Learning to Rank for Information Retrieval},
+  doi = {10.1561/1500000016},
+  issn = {1554-0669},
+  number = {3},
+  pages = {225-331},
+  author = {Tie-Yan Liu}
+}
+
+# Used to support the claim that listwisw >> pairwise & pointwise
+@article{tax2015,
+  title = {A cross-benchmark comparison of 87 learning to rank methods},
+  journal = {Information Processing & Management},
+  volume = {51},
+  number = {6},
+  pages = {757-772},
+  year = {2015},
+  issn = {0306-4573},
+  doi = {https://doi.org/10.1016/j.ipm.2015.07.002},
+  url = {https://www.sciencedirect.com/science/article/pii/S0306457315000862},
+  author = {Niek Tax and Sander Bockting and Djoerd Hiemstra},
+}
+
+# For ListNET loss function
+@inproceedings{listnet2007,
+  author = {Cao, Zhe and Qin, Tao and Liu, Tie-Yan and Tsai, Ming-Feng and Li, Hang},
+  year = {2007},
+  month = {06},
+  pages = {129-136},
+  title = {Learning to Rank: From Pairwise Approach to Listwise Approach},
+  volume = {227},
+  journal = {Proceedings of the 24th International Conference on Machine Learning},
+  doi = {10.1145/1273496.1273513}
+}
+
+# ============================== Models ==============================
+
+# BERT paper
+@article{bert2018,
+  author    = {Jacob Devlin and
+               Ming{-}Wei Chang and
+               Kenton Lee and
+               Kristina Toutanova},
+  title     = {{BERT:} Pre-training of Deep Bidirectional Transformers for Language
+               Understanding},
+  journal   = {CoRR},
+  volume    = {abs/1810.04805},
+  year      = {2018},
+  url       = {http://arxiv.org/abs/1810.04805},
+  archivePrefix = {arXiv},
+  eprint    = {1810.04805},
+  timestamp = {Tue, 30 Oct 2018 20:39:56 +0100},
+  biburl    = {https://dblp.org/rec/journals/corr/abs-1810-04805.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+# AllenAI Longformer BERT-like model with longer context
+@article{Beltagy2020Longformer,
+  title={Longformer: The Long-Document Transformer},
+  author={Iz Beltagy and Matthew E. Peters and Arman Cohan},
+  journal={arXiv:2004.05150},
+  year={2020},
+}
+
+# ============================== Datasets ==============================
+
+# This is from https://huggingface.co/datasets/unicamp-dl/mmarco
+@article{mmarco2021,
+  author       = {Luiz Bonifacio and
+                  Israel Campiotti and
+                  Roberto de Alencar Lotufo and
+                  Rodrigo Frassetto Nogueira},
+  title        = {mMARCO: {A} Multilingual Version of {MS} {MARCO} Passage Ranking Dataset},
+  journal      = {CoRR},
+  volume       = {abs/2108.13897},
+  year         = {2021},
+  url          = {https://arxiv.org/abs/2108.13897},
+  eprinttype    = {arXiv},
+  eprint       = {2108.13897},
+  timestamp    = {Mon, 20 Mar 2023 15:35:34 +0100},
+  biburl       = {https://dblp.org/rec/journals/corr/abs-2108-13897.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+# This is from https://huggingface.co/datasets/microsoft/ms_marco
+@article{msmarco2016,
+  author    = {Tri Nguyen and
+               Mir Rosenberg and
+               Xia Song and
+               Jianfeng Gao and
+               Saurabh Tiwary and
+               Rangan Majumder and
+               Li Deng},
+  title     = {{MS} {MARCO:} {A} Human Generated MAchine Reading COmprehension Dataset},
+  journal   = {CoRR},
+  volume    = {abs/1611.09268},
+  year      = {2016},
+  url       = {http://arxiv.org/abs/1611.09268},
+  archivePrefix = {arXiv},
+  eprint    = {1611.09268},
+  timestamp = {Mon, 13 Aug 2018 16:49:03 +0200},
+  biburl    = {https://dblp.org/rec/journals/corr/NguyenRSGTMD16.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
