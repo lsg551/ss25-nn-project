@@ -330,7 +330,41 @@ class CrossEncoderLongformer(nn.Module):
             }
         )
 
-    def rank(self, query: str, candidates: list[str]) -> list[float]: ...
+    def rank(self, candidates: list[str], scores: torch.Tensor, mask: torch.Tensor) -> list[tuple[str, float]]:
+        """Rank a list of candidates for a given query.
+
+        This method takes the input (query, candidates) and the model's forward
+        output (scores, mask). It applies the mask to the scores, then computes
+        a softmax over the valid candidates to produce a probability distribution.
+        This probability distribution is returned with the candidates, sorted
+        in descending order of probability.
+        
+        Args:
+            candidates (list[str]): List of candidate strings to be ranked.
+            scores (torch.Tensor): Raw logits output from the model, shape (1, Cmax).
+            mask (torch.Tensor): Boolean mask indicating valid candidates,
+                shape (1, Cmax).
+
+        Returns:
+            list[tuple[str, float]]: List of tuples (candidate, probability)
+                sorted by probability.
+        """
+        if scores.dim() != 2 or mask.dim() != 2 or scores.size() != mask.size():
+            raise ValueError("Scores and mask must have the same shape (1, Cmax).")
+        if scores.size(0) != 1:
+            raise ValueError("Batch size must be 1 for ranking a single query.")
+
+        # apply mask: set logits of invalid candidates to -inf
+        masked_scores = scores.masked_fill(~mask, float("-inf"))  # (1, Cmax)
+
+        probs = torch.softmax(masked_scores, dim=-1) # (1, Cmax)
+        valid_probs = probs[0][mask[0]].tolist() # List of probabilities for valid candidates
+
+        if len(valid_probs) != len(candidates):
+            raise ValueError("Number of valid probabilities does not match number of candidates.")
+
+        ranked = sorted(zip(candidates, valid_probs), key=lambda x: x[1], reverse=True)
+        return ranked
 
 
 def print_encoded(enc: BatchEncoding):
