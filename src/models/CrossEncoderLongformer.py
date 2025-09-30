@@ -22,6 +22,8 @@ ranking, e.g. ListMLE or Approximate nDCG (LambdaLoss).
 
 from __future__ import annotations
 
+from typing import cast
+
 import torch
 import torch.nn as nn
 from transformers import AutoModel, BatchEncoding, LongformerTokenizer
@@ -248,4 +250,103 @@ class CrossEncoderLongformer(nn.Module):
 
         return encoding
 
+    @staticmethod
+    def batch_tokenize(
+        queries: list[str],
+        candidates: list[list[str]],
+        *,
+        max_length: int = 4096,
+    ) -> BatchEncoding:
+        """Batch-tokenize multiple (query, candidates[]) samples.
+
+        Packs each query with its variable-length list of candidates into a single
+        sequence (with [CAND] markers), then pads all sequences in the batch to
+        the same length and returns stacked tensors suitable for a single forward
+        pass.
+
+        Args:
+            queries: List of queries, length B.
+            candidates: List (length B) of candidate lists per query.
+            max_length: Maximum sequence length per sample (truncates if longer).
+
+        Returns:
+            BatchEncoding with keys: input_ids, attention_mask, global_attention_mask,
+            each of shape (B, Lmax).
+        """
+        if len(queries) != len(candidates):
+            raise ValueError(
+                f"queries (len={len(queries)}) and candidates (len={len(candidates)}) must have the same length"
+            )
+
+        # Build per-sample encodings first
+        per_sample = [
+            CrossEncoderLongformer.tokenize(q, cands, max_length=max_length)
+            for q, cands in zip(queries, candidates)
+        ]
+
+        # Collect tensors and determine max length for padding
+        ids_list: list[torch.Tensor] = []
+        attn_list: list[torch.Tensor] = []
+        gattn_list: list[torch.Tensor] = []
+        Lmax = 0
+        for enc in per_sample:
+            ids = cast(torch.Tensor, enc["input_ids"]).squeeze(0)  # (L,)
+            attn = cast(torch.Tensor, enc["attention_mask"]).squeeze(0)  # (L,)
+            gattn = cast(torch.Tensor, enc["global_attention_mask"]).squeeze(0)  # (L,)
+            L = int(ids.shape[0])
+            Lmax = max(Lmax, L)
+            ids_list.append(ids)
+            attn_list.append(attn)
+            gattn_list.append(gattn)
+
+        # Pad and stack to (B, Lmax)
+        pad_id_tok = cast(int | None, tokenizer.pad_token_id)
+        pad_id_int: int = int(pad_id_tok) if pad_id_tok is not None else 0
+
+        def pad_1d(x: torch.Tensor, length: int, pad_value: int) -> torch.Tensor:
+            if x.numel() == length:
+                return x
+            pad_len = length - int(x.numel())
+            if pad_len < 0:
+                # Shouldn't happen due to per-sample truncation, but guard anyway
+                return x[:length]
+            return torch.cat([x, x.new_full((pad_len,), pad_value)])
+
+        input_ids = torch.stack(
+            [pad_1d(t, Lmax, pad_id_int) for t in ids_list], dim=0
+        ).long()
+        attention_mask = torch.stack(
+            [pad_1d(t, Lmax, 0) for t in attn_list], dim=0
+        ).long()
+        global_attention_mask = torch.stack(
+            [pad_1d(t, Lmax, 0) for t in gattn_list], dim=0
+        ).long()
+
+        return BatchEncoding(
+            data={
+                "input_ids": input_ids,
+                "attention_mask": attention_mask,
+                "global_attention_mask": global_attention_mask,
+            }
+        )
+
     def rank(self, query: str, candidates: list[str]) -> list[float]: ...
+
+
+def print_encoded(enc: BatchEncoding):
+    """Utility to print out the decoded tokens from a BatchEncoding for debugging.
+
+    Args:
+        enc (BatchEncoding): The encoding to print.
+    """
+    if "input_ids" in enc:
+        ids = enc["input_ids"]
+        if isinstance(ids, torch.Tensor):
+            ids_cpu = ids.detach().to("cpu")
+            B = ids_cpu.shape[0]
+            for i in range(B):
+                seq = ids_cpu[i].tolist()
+                text = tokenizer.decode(seq, skip_special_tokens=False)
+                print(f"decoded[{i}]: {text}")
+    else:
+        print("No input_ids in the encoding")
