@@ -75,6 +75,14 @@ pip install -r requirements.txt
 
 Also, run `make help` to print a list of available commands.
 
+## Reproducing The Results
+
+The key pieces are the notebooks in the `experiments/` folder. Each notebook
+contains the code to train and evaluate a model with a specific learning approach.
+
+After installing the dependencies, you can run the notebooks yourself.
+Note that sufficient system memory and GPU VRAM is required to train the models.
+
 ## License
 
 The code in this repository is licensed under the MIT license (see
