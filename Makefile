@@ -10,3 +10,6 @@ report:	## Compile the report into a PDF.
 	fi
 	typst c -f pdf report/main.typ
 	@echo "Report compiled successfully to ./report/main.pdf"
+
+requirements-txt:	## Generate requirements.txt from uv lockfile.
+	uv export --no-hashes --format requirements-txt > requirements.txt
