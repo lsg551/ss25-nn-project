@@ -39,6 +39,21 @@ For more details, refer to the [project report](./report/main.pdf) and
 
 ## Installation
 
+First, clone this repository:
+
+```bash
+git clone https://github.com/lsg551/ss25-nn-project
+cd ss25-nn-project
+```
+
+> [!TIP]
+> To review the official submission (deadline 2025-09-30 23:59),
+> checkout the `submission` ref (if the latest commit changed after the deadline):
+> ```bash
+> git fetch --all --tags
+> git checkout submission
+> ```
+
 To install the required dependencies, you can either use the
 [`uv` package manager](https://github.com/astral-sh/uv), or fall back to `pip`:
 
